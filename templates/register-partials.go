@@ -7,12 +7,15 @@ import (
 	"strings"
 )
 
-func registerThemePartials(themeRoot string) error {
+func loadThemePartials(themeRoot string) (map[string]*raymond.Template, error) {
 	partialGlob := themeRoot + "/partials/**/*.hbs"
 	partialMatches, err := filepath.Glob(partialGlob)
+
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	var partials = make(map[string]*raymond.Template, 1)
 
 	for _, pageFilepath := range partialMatches {
 		partialName := strings.TrimSuffix(strings.TrimPrefix(pageFilepath, themeRoot+"/partials/"), ".hbs")
@@ -21,12 +24,11 @@ func registerThemePartials(themeRoot string) error {
 
 		template, parseErr := raymond.ParseFile(pageFilepath)
 		if parseErr != nil {
-			return parseErr
+			return nil, parseErr
 		}
 
-		raymond.RemovePartial(partialName)
-		raymond.RegisterPartialTemplate(partialName, template)
+		partials[partialName] = template
 	}
 
-	return nil
+	return partials, nil
 }
